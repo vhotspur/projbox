@@ -147,6 +147,16 @@ SETUP_EOF
 ##            right after the user/sudo setup below, with uid/gid/
 ##            username/home/packages already exported into its
 ##            environment (from setup.rc, see below).
+##   host_hook.sh - optional; NOT copied into the container - run on
+##            the HOST, as yourself, after skel/ is staged but before
+##            it's pushed in, as:
+##              host_hook.sh STAGING_DIR PROJECT_PATH CONTAINER_NAME USERNAME HOME
+##            Free to add or overwrite files under STAGING_DIR (which
+##            mirrors what will become $home) using real host context -
+##            e.g. copying a host credentials file in for a tool that's
+##            about to be installed via on_create.sh. Since it runs
+##            unsandboxed on the host, only put trusted content in a
+##            host_hook.sh.
 ##
 ## With no box.rc, TEMPLATE_NAME is used directly as the image.
 ##
@@ -187,6 +197,7 @@ action_create() {
   local skel_dir="$template_dir/skel"
   local box_rc="$template_dir/box.rc"
   local on_create_src="$template_dir/on_create.sh"
+  local host_hook_src="$template_dir/host_hook.sh"
 
   local username
   username="$(sanitize_name "${PROJBOX_USERNAME:-$(id -un)}")"
@@ -234,11 +245,20 @@ action_create() {
   podman exec --user root "$container_name" \
     sh -c "[ -d /etc/skel ] && cp -a /etc/skel/. \"$home/\" 2>/dev/null; true"
 
-  if [[ -d "$skel_dir" ]]; then
+  if [[ -d "$skel_dir" || -f "$host_hook_src" ]]; then
     skel_staging="$(mktemp -d)"
-    cp -aL "$skel_dir"/. "$skel_staging"/
-    info "copying skel from $skel_dir into the container"
-    podman cp "$skel_staging"/. "$container_name:$home/"
+    if [[ -d "$skel_dir" ]]; then
+      cp -aL "$skel_dir"/. "$skel_staging"/
+    fi
+    if [[ -f "$host_hook_src" ]]; then
+      info "running host_hook.sh"
+      bash "$host_hook_src" "$skel_staging" "$project_path" "$container_name" "$username" "$home" \
+        || info "warning: host_hook.sh exited non-zero"
+    fi
+    if [[ -n "$(ls -A "$skel_staging" 2>/dev/null)" ]]; then
+      info "copying skel into the container"
+      podman cp "$skel_staging"/. "$container_name:$home/"
+    fi
   fi
 
   info "setting up user '$username' with sudo (best effort)"

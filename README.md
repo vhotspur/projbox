@@ -43,6 +43,9 @@ A template is just a folder: `~/.config/projbox/skel/<name>/`, containing any of
   dot files)
 - `on_create.sh`: shell script hook that is executed once the container is
   created
+- `host_hook.sh`: shell script that is executed on the HOST and that can further
+  modify files that are to be copied into home in the container (useful for
+  copying credentials files and other files from host)
 
 ### Example
 
@@ -52,6 +55,7 @@ A template is just a folder: `~/.config/projbox/skel/<name>/`, containing any of
 ├── skel/
 │   ├── .gitconfig
 │   └── .bashrc
+├── host_hook.sh
 └── on_create.sh
 ```
 
