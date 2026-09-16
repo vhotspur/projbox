@@ -1,0 +1,2 @@
+image="fedora:44"
+install="curl git ripgrep"

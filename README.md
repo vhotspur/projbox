@@ -87,3 +87,5 @@ projbox.sh enter
 your dotfiles, your usual packages, and `~/project` pointing at
 `~/projects/myapp` (with read-write permissions).
 
+See more examples in `examples` subdirectory.
+

@@ -1,0 +1,10 @@
+{
+  "numStartups": 1,
+  "installMethod": "native",
+  "autoUpdates": false,
+  "oauthAccount": {
+    "fill-in-your-details-here": "copy from real ~/.claude.json and do not version!"
+  },
+  "hasCompletedOnboarding": true,
+  "lastOnboardingVersion": "2.1.270"
+}
